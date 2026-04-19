@@ -7,8 +7,7 @@ description: >
   Trigger when the user uploads a project zip/tar/archive, sends project source files, or says
   things like "help me set up this project", "run this project", "configure the environment",
   "install dependencies and run", "deploy this locally", "get this project running",
-  "set up my dev environment", "帮我搭项目", "帮我运行这个项目", "配置一下环境",
-  "把这个项目跑起来", "装好依赖跑一下", or provides any compressed project archive.
+  "set up my dev environment", or provides any compressed project archive.
   Do NOT trigger for simple tool installation requests like "install node" or "install python"
   without a project context.
 ---
