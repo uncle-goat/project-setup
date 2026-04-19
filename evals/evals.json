@@ -3,39 +3,44 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "用户上传了一个名为 my-flask-app.zip 的项目压缩包，解压后发现是一个Python Flask项目，包含 requirements.txt、app.py、config.py（里面有 DATABASE_URL=sqlite:///dev.db 的占位符）、templates/ 目录。请按照project-setup skill的流程处理这个项目。",
-      "expected_output": "AI应该：1) 分析出这是Python Flask项目 2) 用国内镜像源安装pip依赖 3) 询问用户数据库配置（虽然默认是sqlite，但应该确认） 4) 配置环境 5) 运行项目 6) 报告访问地址",
+      "prompt": "用户上传了一个名为 my-flask-app.zip 的项目压缩包，解压后发现是一个Python Flask项目，包含 requirements.txt、app.py、config.py（里面有 DATABASE_URL=sqlite:///dev.db 的占位符、SECRET_KEY=your-secret-key-here 的占位符）、templates/ 目录。请按照project-setup skill的流程处理这个项目。",
+      "expected_output": "AI应该：1) 分析出这是Python Flask项目 2) 用国内镜像源安装pip依赖 3) 询问用户不明确的配置 4) 配置环境 5) 运行项目 6) 报告访问地址（超链接形式）和管理员账号",
       "files": [],
       "expectations": [
         "The assistant identifies this as a Python Flask project from the file structure",
         "The assistant uses a Chinese mirror source (Tsinghua or Ali) for pip install",
         "The assistant asks the user about unclear configurations using the AskUserQuestion tool",
-        "The assistant attempts to run the project and reports the result (URL or error)"
+        "The assistant attempts to run the project and reports the result",
+        "The access URL is formatted as a clickable markdown hyperlink: [http://localhost:5000](http://localhost:5000)",
+        "The assistant reports admin account credentials or explicitly states that no default admin account exists"
       ]
     },
     {
       "id": 2,
-      "prompt": "用户上传了一个 nextjs-dashboard.zip，解压后是一个 Next.js 项目，包含 package.json（dependencies里有 next, react, postgres 数据库相关包）、.env.example（里面只有 DATABASE_URL=postgresql://user:password@localhost:5432/mydb 的占位符）、prisma/schema.prisma 文件。请处理这个项目。",
-      "expected_output": "AI应该：1) 识别为Next.js + PostgreSQL项目 2) 用淘宝镜像安装npm依赖 3) 询问用户PostgreSQL的连接信息（端口、用户名、密码、数据库名） 4) 配置.env文件 5) 运行prisma migrate和seed 6) 运行npm run dev 7) 报告访问地址和管理员账号",
+      "prompt": "用户上传了一个 nextjs-dashboard.zip，解压后是一个 Next.js 项目，包含 package.json（dependencies里有 next, react, @prisma/client）、.env.example（里面只有 DATABASE_URL=postgresql://user:password@localhost:5432/mydb 的占位符）、prisma/schema.prisma 文件（定义了User和Post模型，User有email和password字段）、prisma/seed.ts 文件（创建了一个admin用户，邮箱admin@example.com，密码admin123）。请处理这个项目。",
+      "expected_output": "AI应该：1) 识别为Next.js + PostgreSQL项目 2) 用淘宝镜像安装npm依赖 3) 询问用户PostgreSQL连接信息 4) 配置.env 5) 运行prisma migrate和seed 6) 运行npm run dev 7) 报告访问地址（超链接）和管理员账号（从seed.ts中找到的admin@example.com / admin123）",
       "files": [],
       "expectations": [
         "The assistant identifies this as a Next.js project with PostgreSQL dependency",
         "The assistant uses a Chinese mirror source (npmmirror/taobao) for npm install",
-        "The assistant asks the user for PostgreSQL connection details (host, port, username, password, database name) using AskUserQuestion",
+        "The assistant asks the user for PostgreSQL connection details using AskUserQuestion",
         "The assistant recognizes that Prisma schema exists and runs database migration",
-        "The assistant reports the access URL (e.g., http://localhost:3000) after successful startup"
+        "The assistant runs the seed script (prisma/seed.ts) to populate sample data",
+        "The access URL is formatted as a clickable markdown hyperlink",
+        "The assistant reports admin credentials found from the seed script (admin@example.com / admin123), not fabricated ones"
       ]
     },
     {
       "id": 3,
       "prompt": "用户上传了一个 go-api.zip，解压后是一个 Go 项目，包含 go.mod、main.go、Makefile。项目是一个纯 API 服务，不涉及数据库。请处理这个项目。",
-      "expected_output": "AI应该：1) 识别为Go项目 2) 配置Go代理为国内镜像 3) 运行go mod download 4) 不询问数据库配置（因为项目不需要） 5) 运行项目 6) 报告访问地址",
+      "expected_output": "AI应该：1) 识别为Go项目 2) 配置Go代理为国内镜像 3) 运行go mod download 4) 不询问数据库配置 5) 运行项目 6) 报告访问地址（超链接形式）",
       "files": [],
       "expectations": [
         "The assistant identifies this as a Go project from go.mod",
         "The assistant configures Go proxy to a Chinese mirror (goproxy.cn)",
         "The assistant does NOT ask about database configuration since the project has no database dependency",
-        "The assistant runs the project and reports the result"
+        "The assistant runs the project and reports the result",
+        "The access URL is formatted as a clickable markdown hyperlink"
       ]
     }
   ]
