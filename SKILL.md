@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: "Automatically set up, configure, and run an entire project from a zip upload in one shot. Handles extraction, dependency installation with Chinese mirror sources, environment configuration, database setup, sample data seeding, and project startup with result reporting. Trigger when the user uploads a project zip/tar/archive, sends project source files, or says things like help me set up this project, run this project, configure the environment, install dependencies and run, deploy this locally, get this project running, set up my dev environment, or provides any compressed project archive. Do NOT trigger for simple tool installation requests like install node or install python without a project context."
+description: "Automatically set up, configure, run, and package an entire project from a zip/tar upload in one shot. Handles extraction, dependency installation with Chinese mirror sources, environment configuration, database setup with portable install, sample data seeding, project startup with access URL reporting via OpenPreview, admin credential reporting, and project packaging with level-based confirmation. Trigger when the user uploads a project zip/tar/archive, sends project source files, clones a project that needs environment setup, or says things like help me set up this project, run this project, configure the environment, install dependencies and run, deploy this locally, get this project running, set up my dev environment, package this project, zip this project, help me pack this up, or provides any compressed project archive. Do NOT trigger for simple tool installation requests like install node or install python without a project context, writing code or scripts, debugging code errors, writing config files like Dockerfile or nginx, git operations, or code review requests."
 ---
 
 # Project Setup Skill
@@ -21,12 +21,14 @@ Extract the uploaded archive to a working directory and analyze its structure to
 
 **Extraction:**
 
+Extract to `/workspace` so the user can see and access the project files directly.
+
 ```bash
 # For zip files
-unzip -o uploaded.zip -d /data/user/work/project
+unzip -o uploaded.zip -d /workspace/project
 
 # For tar.gz files
-tar -xzf uploaded.tar.gz -C /data/user/work/project
+tar -xzf uploaded.tar.gz -C /workspace/project
 ```
 
 If the archive contains a single root directory, work inside that directory. If it contains files directly at the root, work in the extraction directory itself.
@@ -326,6 +328,12 @@ When something goes wrong, try these approaches in order:
 - **Use domestic mirrors by default.** Always configure mirror sources before installing dependencies. See `references/mirror-sources.md`.
 - **Ask before assuming.** When configuration is ambiguous, ask the user using `AskUserQuestion`. Do not guess.
 - **Be transparent about progress.** Tell the user what you are doing at each step. "I am now installing dependencies..." "I am configuring the database..." This keeps the user informed and builds trust.
-- **Work in `/data/user/work` for intermediate files.** Save temporary scripts, extracted archives, and build artifacts here. Only save final deliverables to `/workspace`.
+- **Extract and work in `/workspace`.** The user needs to see and access their project files. Extract archives, install dependencies, and run the project all under `/workspace`. Do NOT use `/data/user/work` — the user cannot see files there.
 - **Do not modify source code unless absolutely necessary.** The goal is to set up and run the project, not to fix bugs in it. If the project has code issues that prevent it from running, report them to the user rather than silently patching them.
+- **Be careful when packaging/compressing files.** If the user asks you to zip or tar the project, do NOT blindly package everything. First, ask the user what level of packaging they want:
+  - **Source code only** — source files, config files, README, excluding node_modules/, venv/, .git/, build artifacts
+  - **Source + dependencies** — include node_modules/, venv/, vendor/ etc. so the project can run without reinstalling
+  - **Full project** — include database data, uploaded files, logs, everything needed to fully restore the project state
+  - **Custom** — the user specifies what to include/exclude
+  Different files have different importance — source code is essential, node_modules can be reinstalled, .git/ is usually unnecessary, but database data and user uploads may be irreplaceable. Understand the value of each type before deciding what to include.
 - **Keep the user informed about the project structure.** After analysis, briefly summarize what you found: "This is a React + Express full-stack project using PostgreSQL and Redis."
