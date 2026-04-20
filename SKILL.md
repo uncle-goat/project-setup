@@ -117,7 +117,13 @@ Set up all configuration files, environment variables, and connection strings th
 
 - If the project needs a database and the user has one running, configure the connection.
 - If no database is running, check if Docker is available and start one via `docker-compose up -d` or a direct Docker command.
-- If Docker is not available, install and configure the database directly (e.g., `apt install postgresql` for PostgreSQL).
+- If Docker is not available, install the database as a portable installation under `/workspace` so it persists across sessions:
+  - **MySQL:** Download the minimal tarball from dev.mysql.com, extract to `/workspace/mysql/`, initialize with `--initialize-insecure --datadir=/workspace/mysql/data`, and start with a custom socket path (e.g., `/tmp/mysql-sock/mysql.sock`) to avoid permission issues. Use port 3307 to avoid conflicts.
+  - **PostgreSQL:** Download the binary package, extract to `/workspace/postgresql/`, initialize with `initdb -D /workspace/postgresql/data`, and start on a non-default port (e.g., 5433).
+  - **SQLite:** No installation needed — the database file is created automatically by the project.
+  - **Redis:** Download the binary, extract to `/workspace/redis/`, start with `redis-server --dir /workspace/redis/data --port 6380`.
+  - **MongoDB:** Download the tarball, extract to `/workspace/mongodb/`, set `--dbpath /workspace/mongodb/data --port 27018`.
+  - Always check if the database binary already exists in `/workspace/` before downloading — if it does, just start it. This saves time on subsequent sessions.
 - Update the project's database configuration with the correct host, port, username, password, and database name.
 
 **Why environment setup matters:** Projects almost never commit their actual `.env` files. Skipping this step means the app will crash on startup with "database connection refused" or "API_KEY not found" errors that look like code bugs but are actually configuration issues.
@@ -205,7 +211,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
 
 **On success, report ALL of the following:**
 
-1. **Access URL as a clickable hyperlink** — use markdown link format: `[http://localhost:3000](http://localhost:3000)`. If multiple services are running (e.g., frontend + backend), list each as a separate link.
+1. **Access URL using the OpenPreview tool** — after confirming the server is running, call `OpenPreview` with the preview URL (e.g., `http://localhost:3000`) and the command_id of the non-blocking server command. This gives the user a clickable button to open the application directly. Also include the URL as a markdown hyperlink for reference.
 2. **Admin account credentials** — search for admin credentials in these locations:
    - Seed scripts (prisma/seed.ts, seeds/*.py, etc.)
    - .env files you created or the project provided
@@ -213,8 +219,16 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
    - docker-compose.yml for environment variable defaults
    - If you created an admin account during Step 5, report the username and password you set.
    - If no admin account exists and you cannot find one, explicitly say: "该项目未配置默认管理员账号，需要自行注册。" Do NOT fabricate credentials.
+   - **Adapt to the project's login method:** if the project uses email login, report the email and password. If it uses username login, report the username and password. If it uses phone number, report the phone and verification code or password. Check the project's auth configuration to determine the correct format.
 3. **A brief summary of what was set up** (tech stack, database, mirror sources used, etc.).
 4. **Any notable configuration decisions you made** and why.
+
+**Persistent access information:** After the initial setup, include the access URL and admin credentials in every subsequent response during this conversation. The user should never have to scroll up to find how to access their project. Format it concisely at the top or bottom of each response:
+
+```
+📋 项目访问: [http://localhost:3000](http://localhost:3000)
+👤 管理员: admin@example.com / admin123
+```
 
 Format the report clearly so the user can immediately click the link and start using the application.
 
