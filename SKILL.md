@@ -118,8 +118,7 @@ Set up all configuration files, environment variables, and connection strings th
 **Database configuration:**
 
 - If the project needs a database and the user has one running, configure the connection.
-- If no database is running, check if Docker is available and start one via `docker-compose up -d` or a direct Docker command.
-- If Docker is not available, install the database as a portable installation under `/workspace` so it persists across sessions:
+- If no database is running, you MUST install the database as a portable installation under `/workspace` — this ensures files persist across sessions. Do NOT use `apt-get`, `yum`, or any system package manager to install databases, as those files get cleaned up when the session resets. Do NOT assume Docker is available either — always do a portable install:
   - **MySQL:** Download the minimal tarball from dev.mysql.com, extract to `/workspace/mysql/`, initialize with `--initialize-insecure --datadir=/workspace/mysql/data`, and start with a custom socket path (e.g., `/tmp/mysql-sock/mysql.sock`) to avoid permission issues. Use port 3307 to avoid conflicts.
   - **PostgreSQL:** Download the binary package, extract to `/workspace/postgresql/`, initialize with `initdb -D /workspace/postgresql/data`, and start on a non-default port (e.g., 5433).
   - **SQLite:** No installation needed — the database file is created automatically by the project.
@@ -328,7 +327,7 @@ When something goes wrong, try these approaches in order:
 - **Use domestic mirrors by default.** Always configure mirror sources before installing dependencies. See `references/mirror-sources.md`.
 - **Ask before assuming.** When configuration is ambiguous, ask the user using `AskUserQuestion`. Do not guess.
 - **Be transparent about progress.** Tell the user what you are doing at each step. "I am now installing dependencies..." "I am configuring the database..." This keeps the user informed and builds trust.
-- **Extract and work in `/workspace`.** The user needs to see and access their project files. Extract archives, install dependencies, and run the project all under `/workspace`. Do NOT use `/data/user/work` — the user cannot see files there.
+- **Everything lives in `/workspace`.** This is the user-visible directory — all project files, dependencies, databases, virtual environments, and configurations must be installed and run under `/workspace`. System package manager installs (apt-get, yum, pip install --system, npm install -g) are cleaned up when the session resets, so they will NOT persist. For databases, use portable tarball installations under `/workspace/mysql/`, `/workspace/postgresql/`, etc. For Python, use `venv` under `/workspace/project/venv/`. For Node.js, dependencies go into `/workspace/project/node_modules/`. Do NOT use `/data/user/work` — the user cannot see files there.
 - **Do not modify source code unless absolutely necessary.** The goal is to set up and run the project, not to fix bugs in it. If the project has code issues that prevent it from running, report them to the user rather than silently patching them.
 - **Be careful when packaging/compressing files.** If the user asks you to zip or tar the project, do NOT blindly package everything. First, ask the user what level of packaging they want:
   - **Source code only** — source files, config files, README, excluding node_modules/, venv/, .git/, build artifacts
