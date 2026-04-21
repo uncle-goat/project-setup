@@ -118,12 +118,77 @@ Set up all configuration files, environment variables, and connection strings th
 **Database configuration:**
 
 - If the project needs a database and the user has one running, configure the connection.
-- If no database is running, you MUST install the database as a portable installation under `/workspace` — this ensures files persist across sessions. Do NOT use `apt-get`, `yum`, or any system package manager to install databases, as those files get cleaned up when the session resets. Do NOT assume Docker is available either — always do a portable install:
-  - **MySQL:** Download the minimal tarball from dev.mysql.com, extract to `/workspace/mysql/`, initialize with `--initialize-insecure --datadir=/workspace/mysql/data`, and start with a custom socket path (e.g., `/tmp/mysql-sock/mysql.sock`) to avoid permission issues. Use port 3307 to avoid conflicts.
-  - **PostgreSQL:** Download the binary package, extract to `/workspace/postgresql/`, initialize with `initdb -D /workspace/postgresql/data`, and start on a non-default port (e.g., 5433).
+- If no database is running, you MUST install the database as a portable installation under `/workspace` — this ensures files persist across sessions. Do NOT use `apt-get`, `yum`, or any system package manager to install databases, as those files get cleaned up when the session resets. Do NOT assume Docker is available either — always do a portable install. Below are the exact commands — follow them precisely, do NOT substitute with your own approach:
+
+  - **MySQL (portable install to /workspace/mysql/):**
+    ```bash
+    # Check if already installed
+    if [ -f /workspace/mysql/bin/mysqld ]; then
+      echo "MySQL already installed at /workspace/mysql/"
+    else
+      # Download MySQL 8.0 minimal tarball
+      cd /workspace && wget https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
+      tar -xf mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
+      mv mysql-8.0.40-linux-glibc2.17-x86_64-minimal mysql
+      rm mysql-8.0.40-linux-glibc2.17-x86_64-minimal.tar.xz
+      # Install required library
+      apt-get install -y libaio1 2>/dev/null
+      # Initialize
+      mkdir -p /workspace/mysql/data /tmp/mysql-sock
+      /workspace/mysql/bin/mysqld --initialize-insecure --datadir=/workspace/mysql/data --user=$(whoami)
+    fi
+    # Start MySQL on port 3306 with custom socket
+    /workspace/mysql/bin/mysqld --datadir=/workspace/mysql/data --port=3306 --socket=/tmp/mysql-sock/mysql.sock --user=$(whoami) --daemonize
+    # Set root password (optional, use project's credentials)
+    /workspace/mysql/bin/mysql -S /tmp/mysql-sock/mysql.sock -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
+    ```
+    **Connection info:** host=localhost, port=3306, socket=/tmp/mysql-sock/mysql.sock, user=root, password=root
+
+  - **PostgreSQL (portable install to /workspace/postgresql/):**
+    ```bash
+    if [ -f /workspace/postgresql/bin/pg_ctl ]; then
+      echo "PostgreSQL already installed at /workspace/postgresql/"
+    else
+      cd /workspace && wget https://get.enterprisedb.com/postgresql/postgresql-16.4-1-linux-x64-binaries.tar.gz
+      tar -xzf postgresql-16.4-1-linux-x64-binaries.tar.gz
+      mv pgsql postgresql
+      rm postgresql-16.4-1-linux-x64-binaries.tar.gz
+      /workspace/postgresql/bin/initdb -D /workspace/postgresql/data
+    fi
+    /workspace/postgresql/bin/pg_ctl -D /workspace/postgresql/data -l /workspace/postgresql/logfile -o "-p 5433" start
+    /workspace/postgresql/bin/createdb -h localhost -p 5433 -U postgres $(basename $(pwd))_db
+    ```
+    **Connection info:** host=localhost, port=5433, user=postgres, password=postgres
+
   - **SQLite:** No installation needed — the database file is created automatically by the project.
-  - **Redis:** Download the binary, extract to `/workspace/redis/`, start with `redis-server --dir /workspace/redis/data --port 6380`.
-  - **MongoDB:** Download the tarball, extract to `/workspace/mongodb/`, set `--dbpath /workspace/mongodb/data --port 27018`.
+  - **Redis (portable install to /workspace/redis/):**
+    ```bash
+    if [ -f /workspace/redis/bin/redis-server ]; then
+      echo "Redis already installed at /workspace/redis/"
+    else
+      cd /workspace && wget https://github.com/redis/redis/archive/refs/tags/7.2.4.tar.gz -O redis-7.2.4.tar.gz
+      tar -xzf redis-7.2.4.tar.gz && cd redis-7.2.4 && make -j$(nproc)
+      mkdir -p /workspace/redis/bin /workspace/redis/data
+      cp src/redis-server src/redis-cli /workspace/redis/bin/
+    fi
+    /workspace/redis/bin/redis-server --dir /workspace/redis/data --port 6380 --daemonize yes
+    ```
+    **Connection info:** host=localhost, port=6380
+
+  - **MongoDB (portable install to /workspace/mongodb/):**
+    ```bash
+    if [ -f /workspace/mongodb/bin/mongod ]; then
+      echo "MongoDB already installed at /workspace/mongodb/"
+    else
+      cd /workspace && wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2204-7.0.14.tgz
+      tar -xzf mongodb-linux-x86_64-ubuntu2204-7.0.14.tgz
+      mv mongodb-linux-x86_64-ubuntu2204-7.0.14 mongodb
+      rm mongodb-linux-x86_64-ubuntu2204-7.0.14.tgz
+      mkdir -p /workspace/mongodb/data
+    fi
+    /workspace/mongodb/bin/mongod --dbpath /workspace/mongodb/data --port 27018 --fork --logpath /workspace/mongodb/mongod.log
+    ```
+    **Connection info:** host=localhost, port=27018
   - Always check if the database binary already exists in `/workspace/` before downloading — if it does, just start it. This saves time on subsequent sessions.
 - Update the project's database configuration with the correct host, port, username, password, and database name.
 
@@ -224,11 +289,12 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
 3. **A brief summary of what was set up** (tech stack, database, mirror sources used, etc.).
 4. **Any notable configuration decisions you made** and why.
 
-**Persistent access information:** After the initial setup, include the access URL and admin credentials in every subsequent response during this conversation. The user should never have to scroll up to find how to access their project. Format it concisely at the top or bottom of each response:
+**Persistent access information block:** After the initial setup report, append the following block to the END of every response you give in this conversation. Do not skip it, do not evaluate whether it's relevant — just append it every time, like a signature:
 
 ```
-📋 项目访问: [http://localhost:3000](http://localhost:3000)
-👤 管理员: admin@example.com / admin123
+---
+📋 项目访问: [URL](URL)
+👤 管理员: [credentials]
 ```
 
 Format the report clearly so the user can immediately click the link and start using the application.

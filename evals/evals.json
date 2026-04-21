@@ -3,41 +3,41 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "用户上传了一个 flask-blog.zip，解压后发现是一个Python Flask博客项目，包含 requirements.txt、app.py、config.py、templates/、static/ 目录。config.py 中数据库配置为 SQLite。请按照project-setup skill的流程处理这个项目。",
-      "expected_output": "AI应该将项目解压到 /workspace/ 下，使用国内镜像安装依赖，创建 venv 在 /workspace/ 下，运行项目并报告结果。",
+      "prompt": "用户上传了一个 flask-blog.zip，解压后发现是一个Python Flask博客项目，包含 requirements.txt、app.py、config.py（数据库配置为 MySQL，host=localhost, port=3306）、templates/、static/ 目录。系统上没有安装 MySQL。请按照project-setup skill的流程处理这个项目。",
+      "expected_output": "AI应该使用skill中提供的精确命令将MySQL便携安装到 /workspace/mysql/（端口3306），不使用apt-get。创建venv在/workspace/下，使用国内镜像，运行项目并报告结果。",
       "files": [],
       "expectations": [
         "The assistant extracts the project to /workspace/ (not /data/user/work/)",
-        "The assistant creates a Python virtual environment under /workspace/ (e.g., /workspace/flask-blog/venv/)",
+        "The assistant installs MySQL using the EXACT portable install commands from the skill (wget tarball, extract to /workspace/mysql/, initialize, start on port 3306) — NOT using apt-get",
+        "The assistant creates a Python virtual environment under /workspace/",
         "The assistant uses a Chinese mirror source for pip install",
-        "The assistant runs the project and reports the result"
+        "The assistant runs the project and reports the access URL and admin credentials"
       ]
     },
     {
       "id": 2,
-      "prompt": "用户上传了一个 nextjs-admin.zip，解压后是一个 Next.js 管理后台项目，包含 package.json（dependencies: next, react, @prisma/client）、.env.example、prisma/schema.prisma（User模型有email和password字段，数据库为 PostgreSQL）、prisma/seed.ts（创建admin用户 admin@example.com / admin123）。系统上没有安装 PostgreSQL。项目运行成功后，用户说：'帮我把这个项目打包一下'。请处理完整流程。",
-      "expected_output": "AI应该：1) 用淘宝镜像安装依赖 2) 将PostgreSQL便携安装到 /workspace/postgresql/（不能用 apt-get） 3) 运行prisma migrate和seed 4) 用OpenPreview提供访问地址 5) 报告管理员账号 6) 打包前询问用户要什么级别的打包",
+      "prompt": "用户上传了一个 nextjs-admin.zip，解压后是一个 Next.js 管理后台项目，包含 package.json（dependencies: next, react, @prisma/client）、.env.example、prisma/schema.prisma（User模型有email和password字段，数据库为 MySQL）、prisma/seed.ts（创建admin用户 admin@example.com / admin123）。系统上没有安装 MySQL。项目运行成功后，用户说：'帮我把这个项目打包一下'。请处理完整流程。",
+      "expected_output": "AI应该：1) 用淘宝镜像安装依赖 2) 将MySQL便携安装到 /workspace/mysql/（端口3306，使用skill中的精确命令） 3) 运行prisma migrate和seed 4) 用OpenPreview提供访问地址 5) 报告管理员账号 6) 打包前询问用户要什么级别的打包",
       "files": [],
       "expectations": [
         "The assistant uses a Chinese mirror source (npmmirror) for npm install",
-        "The assistant installs PostgreSQL as a portable installation under /workspace/postgresql/ (NOT using apt-get, yum, or any system package manager)",
+        "The assistant installs MySQL using the EXACT portable install commands from the skill (wget tarball from dev.mysql.com, extract to /workspace/mysql/, port 3306) — NOT using apt-get",
         "The assistant uses OpenPreview tool to provide the access URL after the server starts",
         "The assistant reports admin credentials from seed.ts (admin@example.com / admin123)",
-        "When asked to package, the assistant asks the user what level of packaging they want (source only, source+deps, full project, or custom) BEFORE creating the zip",
+        "When asked to package, the assistant asks the user what level of packaging they want BEFORE creating the zip",
         "The assistant does NOT blindly zip the entire directory without asking"
       ]
     },
     {
       "id": 3,
-      "prompt": "用户上传了一个 go-api.zip，解压后是一个 Go 项目，包含 go.mod、main.go、Makefile。这是一个纯 API 服务，不涉及数据库。系统上没有安装 Go。请处理这个项目。",
-      "expected_output": "AI应该：1) 检测到需要Go但没有安装 2) 安装Go到 /workspace/ 下 3) 配置GOPROXY 4) 运行项目 5) 报告访问地址",
+      "prompt": "场景模拟：项目已经搭建完成，正在运行中。访问地址是 http://localhost:3000，管理员是 admin@example.com / admin123。现在用户发送了以下3条后续消息，请分别模拟你的回复：\n\n消息1：'项目报了一个错，帮我看看'\n消息2：'帮我加一个新功能'\n消息3：'帮我把项目打包一下'\n\n对于每条消息，请写出你的完整回复内容。注意：这个项目之前已经按照project-setup skill搭建好了。",
+      "expected_output": "AI在每一条回复中都必须包含访问地址和管理员账号，无论用户问什么。",
       "files": [],
       "expectations": [
-        "The assistant identifies this as a Go project",
-        "The assistant installs Go if not available",
-        "The assistant configures Go proxy to a Chinese mirror (goproxy.cn)",
-        "The assistant does NOT ask about database configuration",
-        "The assistant runs the project and reports the access URL using OpenPreview"
+        "In response to message 1 (bug report), the assistant includes the access URL and admin credentials",
+        "In response to message 2 (new feature request), the assistant includes the access URL and admin credentials",
+        "In response to message 3 (package request), the assistant includes the access URL and admin credentials",
+        "The assistant asks about packaging level before zipping in response to message 3"
       ]
     }
   ]
