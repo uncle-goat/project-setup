@@ -118,7 +118,7 @@ Set up all configuration files, environment variables, and connection strings th
 **Database configuration:**
 
 - If the project needs a database and the user has one running, configure the connection.
-- If no database is running, you MUST install the database as a portable installation under `/workspace` — this ensures files persist across sessions. Do NOT use `apt-get`, `yum`, or any system package manager to install databases, as those files get cleaned up when the session resets. Do NOT assume Docker is available either — always do a portable install. Below are the exact commands — follow them precisely, do NOT substitute with your own approach:
+- If no database is running, you MUST install the database as a portable installation under `/workspace` — this ensures files persist across sessions. Do NOT use `apt-get`, `yum`, or any system package manager to install databases, as those files get cleaned up when the session resets. Do NOT assume Docker is available either — always do a portable install. Below are the exact commands — copy and paste them as-is, do NOT change the download URLs, do NOT substitute mirrors, do NOT change the target directory (e.g., do NOT use /tmp — it gets cleaned), do NOT use your own approach:
 
   - **MySQL (portable install to /workspace/mysql/):**
     ```bash
